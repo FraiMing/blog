@@ -4,7 +4,7 @@ published: 2026-10-29
 description: '学习完 hermes 的核心工作 loop 源码后做的小笔记总结'
 image: ''
 tags: [hermes, loop]
-category: ''
+category: 'hermes'
 draft: false 
 lang: ''
 ---
@@ -13,18 +13,7 @@ lang: ''
 
 ## 先看流程概况
 
-```mermaid
-flowchart TD
-    U["1. 用户发送消息"] --> BC["2. Build Context"]
-    BC --> LLM["3. Context 发给 LLM"]
-    LLM --> DEC{"4. 是否调用 Tool?"}
-    DEC -->|是| EXEC["5. 执行 Tool"]
-    EXEC --> FEED["6. Result 回灌 LLM"]
-    FEED --> BC
-    DEC -->|否| RESP["7. 最终回复"]
-    RESP --> MU["8. Memory Update"]
-    MU --> DONE["本轮结束"]
-```
+![总流程图](./summary.png "总流程图")
 
 这个没啥好说的，ReAct 思路下的传统 loop 了
 接下来我们逐步拆分下实现细节
