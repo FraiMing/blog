@@ -81,7 +81,7 @@ wire:
 
 然后为什么又要拼 system 进去，为什么多搞一步，这有什么区别？
 
-是因为 system 在一些时候是要重新 build 的（eg：压缩、换 模型/provider），所以选择单独组装一次这份会变的 system，而不是 messages 中那份就像撤不回改不了的历史消息一样。
+是因为 system 在一些时候是要重新 build 的（eg：压缩、换模型/provider），所以选择单独组装一次这份会变的 system，而不是 messages 中那份就像撤不回改不了的历史消息一样。
 
 最终一次请求 = 四样东西
 ```
