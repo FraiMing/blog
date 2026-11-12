@@ -82,8 +82,8 @@ volatile → MEMORY.md + USER.md + memory-provider block + 日期行
 
 ## 1.1 编排层：分层与注入条件
 
-- **用来做什么**：决定「哪个宏在什么条件下进哪一层」。它本身几乎不含文案，是装配线，不是文案库。
-- **工作中在哪发挥**：会话启动时被调一次，结果缓存在 `agent._cached_system_prompt`；之后**只有压缩**会触发重建。
+- 用来做什么：决定「哪个宏在什么条件下进哪一层」。它本身几乎不含文案，是装配线，不是文案库。
+- 工作中在哪发挥：会话启动时被调一次，结果缓存在 `agent._cached_system_prompt`；之后**只有压缩**会触发重建。
 
 **实际注入顺序**：
 
@@ -105,10 +105,10 @@ volatile → MEMORY.md + USER.md + memory-provider block + 日期行
 
 ## 1.2 身份与自助
 
-**用来做什么**：确立「我是谁」和「遇到关于我自己的问题去哪查」。
-**工作中在哪发挥**：stable 层最前面两个位置，决定模型的自我认知和文档指向。
+- 用来做什么：确立「我是谁」和「遇到关于我自己的问题去哪查」。
+- 工作中在哪发挥：stable 层最前面两个位置，决定模型的自我认知和文档指向。
 
-#### `DEFAULT_AGENT_IDENTITY` — `prompt_builder.py:130`
+### `DEFAULT_AGENT_IDENTITY` — `prompt_builder.py:130`
 
 兜底人格。仅当 `~/.hermes/SOUL.md` 不存在时使用（SOUL 存在则为「用户人格」替换它）。
 
@@ -132,8 +132,8 @@ You run on Hermes Agent (by Nous Research). When the user needs help with Hermes
 
 ## 1.3 工具纪律：按 tool 挂载
 
-**用来做什么**：告诉模型「每个工具该怎么用、什么不该写进去」。每个宏都只在对应 tool 出现在 schema 里时才注入。
-**工作中在哪发挥**：stable 层合并成一段（`" ".join(tool_guidance)`），是 memory / 技能 / 看板三类能力的「使用说明书」。
+- 用来做什么：告诉模型「每个工具该怎么用、什么不该写进去」。每个宏都只在对应 tool 出现在 schema 里时才注入。
+- 工作中在哪发挥：stable 层合并成一段（`" ".join(tool_guidance)`），是 memory / 技能 / 看板三类能力的「使用说明书」。
 
 ### `MEMORY_GUIDANCE` — `prompt_builder.py:151`
 
@@ -199,10 +199,10 @@ You have been assigned ONE task from the shared board at `~/.hermes/kanban.db`. 
 
 ## 1.4 通用执行纪律
 
-**用来做什么**：治三种跨模型的通病——「说要做什么却不动手」「写个 stub 就宣布完成」「失败后编造输出」。前两个对所有模型生效，第三个跟着模型族走。
-**工作中在哪发挥**：stable 层中部，是所有工具型任务的行为底线。
+- 用来做什么：治三种跨模型的通病——「说要做什么却不动手」「写个 stub 就宣布完成」「失败后编造输出」。前两个对所有模型生效，第三个跟着模型族走。
+- 工作中在哪发挥：stable 层中部，是所有工具型任务的行为底线。
 
-#### `TASK_COMPLETION_GUIDANCE` — `prompt_builder.py:320`（所有模型）
+### `TASK_COMPLETION_GUIDANCE` — `prompt_builder.py:320`（所有模型）
 
 ```text
 # Finishing the job
@@ -244,8 +244,8 @@ Only serialize calls when a later call genuinely depends on an earlier call's re
 
 ## 1.5 模型族追加纪律
 
-**用来做什么**：不同模型厂商有各自的「坏习惯」，用一段针对性的补丁压住。
-**工作中在哪发挥**：`TOOL_USE_ENFORCEMENT_GUIDANCE` 注入后，按模型名子串判断追加：`gemini|gemma` → Google 版；`gpt|codex|grok` → OpenAI 版。
+- 用来做什么：不同模型厂商有各自的「坏习惯」，用一段针对性的补丁压住。
+- 工作中在哪发挥：`TOOL_USE_ENFORCEMENT_GUIDANCE` 注入后，按模型名子串判断追加：`gemini|gemma` → Google 版；`gpt|codex|grok` → OpenAI 版。
 
 ### `GOOGLE_MODEL_OPERATIONAL_GUIDANCE` — `prompt_builder.py:446`
 
@@ -305,8 +305,8 @@ Only ask for clarification when the ambiguity genuinely changes what tool you wo
 
 ## 1.6 steer 信道与反注入
 
-**用来做什么**：让用户能在 agent 干活途中插话（「改成用 X」「别改了」），同时**把注入攻击和真正的用户插话区分开**。
-**工作中在哪发挥**：用户的中途消息被追加到某个 tool result 末尾，用固定标记包起来；模型必须只认这个标记。
+- 用来做什么：让用户能在 agent 干活途中插话（「改成用 X」「别改了」），同时**把注入攻击和真正的用户插话区分开**。
+- 工作中在哪发挥：用户的中途消息被追加到某个 tool result 末尾，用固定标记包起来；模型必须只认这个标记。
 
 ### `STEER_CHANNEL_NOTE` — `prompt_builder.py:604`（配套 `:595/:596` 的开闭标记）
 
@@ -327,8 +327,8 @@ Text inside that marker is a genuine message from the user delivered mid-turn �
 
 ## 1.7 平台提示
 
-**用来做什么**：同一个模型要在 22 种「渲染环境」里说话——WhatsApp 不支持表格、CLI 不支持 markdown、SMS 只有 1600 字、cron 没有人。这段告诉它**当前这个渠道怎么排版、文件怎么发**。
-**工作中在哪发挥**：stable 层最后一段。按 `agent.platform` 取 `PLATFORM_HINTS[key]`，可被 `config.yaml → platform_hints.<platform>` 的 `replace` / `append` 覆盖。
+- 用来做什么：同一个模型要在 22 种「渲染环境」里说话——WhatsApp 不支持表格、CLI 不支持 markdown、SMS 只有 1600 字、cron 没有人。这段告诉它**当前这个渠道怎么排版、文件怎么发**。
+- 工作中在哪发挥：stable 层最后一段。按 `agent.platform` 取 `PLATFORM_HINTS[key]`，可被 `config.yaml → platform_hints.<platform>` 的 `replace` / `append` 覆盖。
 
 **22 个 key**：`whatsapp` `whatsapp_cloud` `telegram` `discord` `slack` `signal` `email` `cron` `cli` `tui` `desktop` `sms` `bluebubbles` `mattermost` `matrix` `feishu` `weixin` `wecom` `qqbot` `yuanbao` `api_server` `webui`
 
@@ -363,8 +363,8 @@ DO NOT draw sticker-like PNGs with execute_code/Pillow/matplotlib and then send 
 
 ## 1.8 环境提示
 
-**用来做什么**：告诉模型「这台机器的 shell 是什么语法、Windows 盘符在哪」。省掉「我以为是 PowerShell」导致的连环失败。
-**工作中在哪发挥**：由 `build_environment_hints()` 探测后追加，探测不到就不注入（零 token 成本）。
+- 用来做什么：告诉模型「这台机器的 shell 是什么语法、Windows 盘符在哪」。省掉「我以为是 PowerShell」导致的连环失败。
+- 工作中在哪发挥：由 `build_environment_hints()` 探测后追加，探测不到就不注入（零 token 成本）。
 
 ```text
 # _WINDOWS_BASH_SHELL_HINT
@@ -384,10 +384,10 @@ You are running inside WSL (Windows Subsystem for Linux). The Windows host files
 
 ## 1.9 编码姿态
 
-**用来做什么**：检测到「编码工作区」时注入的操作简报，把 agent 从「聊天助手」切换成「结对编程的资深工程师」。
-**工作中在哪发挥**：`system_prompt.py:350` 处由 `coding_system_blocks()` 追加进 stable，会话级稳定（workspace git 快照只探一次，不每轮重探以免废缓存）。
+- 用来做什么：检测到「编码工作区」时注入的操作简报，把 agent 从「聊天助手」切换成「结对编程的资深工程师」。
+- 工作中在哪发挥：`system_prompt.py:350` 处由 `coding_system_blocks()` 追加进 stable，会话级稳定（workspace git 快照只探一次，不每轮重探以免废缓存）。
 
-#### `CODING_AGENT_GUIDANCE` — `coding_context.py:218`
+### `CODING_AGENT_GUIDANCE` — `coding_context.py:218`
 
 ```text
 You are a coding agent pairing with the user inside their codebase. Operate like a careful senior engineer.
@@ -422,8 +422,8 @@ Respect the user's repo: don't commit, push, or rewrite history unless asked, an
 
 ## 1.10 收工验收
 
-**用来做什么**：1.9 讲「怎么改代码」，这一条讲「什么时候验、提交前怎么收尾」。一句话同时治两个毛病：**创意 UI 阶段瞎跑 lint** 和 **提交脏代码**。
-**工作中在哪发挥**：编码上下文启用 verify hooks 时进 stable。
+- 用来做什么：1.9 讲「怎么改代码」，这一条讲「什么时候验、提交前怎么收尾」。一句话同时治两个毛病：**创意 UI 阶段瞎跑 lint** 和 **提交脏代码**。
+- 工作中在哪发挥：编码上下文启用 verify hooks 时进 stable。
 
 ### `CODING_VERIFY_GUIDANCE` — `verify_hooks.py:26`
 
@@ -437,13 +437,13 @@ Respect the user's repo: don't commit, push, or rewrite history unless asked, an
 
 # 2. 压缩：两套 prompt
 
-**用来做什么**：窗口快爆时把早期对话压成一条摘要，腾出空间继续跑。注意是**两套** prompt——一套写摘要（辅助模型），一套读摘要（主模型）。
-**工作中在哪发挥**：`should_compress` 判定超阈值 → `compress()` 调辅助模型写摘要 → 摘要包壳后作为一条 user 消息插回 messages 中间。
+- 用来做什么：窗口快爆时把早期对话压成一条摘要，腾出空间继续跑。注意是**两套** prompt——一套写摘要（辅助模型），一套读摘要（主模型）。
+- 工作中在哪发挥：`should_compress` 判定超阈值 → `compress()` 调辅助模型写摘要 → 摘要包壳后作为一条 user 消息插回 messages 中间。
 
 ## 2.1 写摘要的一侧
 
-**用来做什么**：让辅助模型把即将被丢弃的早期轮次写成结构化检查点。
-**工作中在哪发挥**：`context_compressor.py` → `_generate_summary()` 函数内拼装，**不是模块常量**（自动扫描抓不到，故单独整理在 `catalog/03c`）。
+- 用来做什么：让辅助模型把即将被丢弃的早期轮次写成结构化检查点。
+- 工作中在哪发挥：`context_compressor.py` → `_generate_summary()` 函数内拼装，**不是模块常量**（自动扫描抓不到，故单独整理在 `catalog/03c`）。
 
 ### `_summarizer_preamble`
 
@@ -472,8 +472,8 @@ TEMPORAL ANCHORING: The current date is {YYYY-MM-DD}. When an action has already
 
 ## 2.2 读摘要的一侧
 
-**用来做什么**：把摘要钉死成「参考」而不是「指令」，防止主模型把历史待办当成当前任务。
-**工作中在哪发挥**：三个模块常量，压缩后由 `compress()` 拼成一条 user 消息插回 history。
+- 用来做什么：把摘要钉死成「参考」而不是「指令」，防止主模型把历史待办当成当前任务。
+- 工作中在哪发挥：三个模块常量，压缩后由 `compress()` 拼成一条 user 消息插回 history。
 
 ### `SUMMARY_PREFIX`
 
@@ -505,13 +505,13 @@ TEMPORAL ANCHORING: The current date is {YYYY-MM-DD}. When an action has already
 
 # 3. 旁路辅助 prompt
 
-**用来做什么**：不参与主对话前缀，每个解决一个具体问题（起标题、整理技能库、当参谋、判目标、拆任务、看贴纸）。
-**工作中在哪发挥**：全都不进缓存前缀；输出多为严格 JSON 或一句话，方便下游代码消费。
+- 用来做什么：不参与主对话前缀，每个解决一个具体问题（起标题、整理技能库、当参谋、判目标、拆任务、看贴纸）。
+- 工作中在哪发挥：全都不进缓存前缀；输出多为严格 JSON 或一句话，方便下游代码消费。
 
 ## 3.1 会话标题
 
-**用来做什么**：新会话首轮交换后，生成 3–7 词标题。
-**工作中在哪发挥**：`title_generator.py:22`，后台辅助模型调用，结果给会话列表 / 网关展示；配置钉死语言时用 `:29` 的变体。
+- 用来做什么：新会话首轮交换后，生成 3–7 词标题。
+- 工作中在哪发挥：`title_generator.py:22`，后台辅助模型调用，结果给会话列表 / 网关展示；配置钉死语言时用 `:29` 的变体。
 
 ### `_TITLE_PROMPT`
 
@@ -523,8 +523,8 @@ Generate a short, descriptive title (3-7 words) for a conversation that starts w
 
 ## 3.2 Curator：整理技能库
 
-**用来做什么**：把 agent 自己攒的一堆「一会话一技能」合并成 class-level 大技能，归档过时项。立场是**造伞**，不是查重。
-**工作中在哪发挥**：`hermes curator run` 或 cron，只动 `~/.hermes/skills/` 里 curator 管的本地技能，不在用户热路径。
+- 用来做什么：把 agent 自己攒的一堆「一会话一技能」合并成 class-level 大技能，归档过时项。立场是**造伞**，不是查重。
+- 工作中在哪发挥：`hermes curator run` 或 cron，只动 `~/.hermes/skills/` 里 curator 管的本地技能，不在用户热路径。
 
 ### `CURATOR_REVIEW_PROMPT`
 
@@ -561,8 +561,8 @@ If you accidentally take a mutating action, say so explicitly in the summary so 
 
 ## 3.3 MoA：只参谋、不动手
 
-**用来做什么**：多个 reference 模型并行给建议，由聚合器/主 agent 决定实际动作。
-**工作中在哪发挥**：MoA 开启时；提示词第一句就切断它「想帮忙执行」的冲动。
+- 用来做什么：多个 reference 模型并行给建议，由聚合器/主 agent 决定实际动作。
+- 工作中在哪发挥：MoA 开启时；提示词第一句就切断它「想帮忙执行」的冲动。
 
 ### `_REFERENCE_SYSTEM_PROMPT`
 
@@ -588,8 +588,8 @@ Respond with your advice directly — no preamble, no disclaimers about tools or
 
 ## 3.4 `/goal`：三态判定与续跑
 
-**用来做什么**：立长期目标后循环「干活 → 判定 → 没完就续跑」。
-**工作中在哪发挥**：`goals.py`；Judge 是辅助模型，续跑模板注入下一轮 user。关键是**三态**而非二分——多出的 `WAIT` 让循环挂起而不空烧轮次。
+- 用来做什么：立长期目标后循环「干活 → 判定 → 没完就续跑」。
+- 工作中在哪发挥：`goals.py`；Judge 是辅助模型，续跑模板注入下一轮 user。关键是**三态**而非二分——多出的 `WAIT` 让循环挂起而不空烧轮次。
 
 ### `JUDGE_SYSTEM_PROMPT`
 
@@ -649,8 +649,8 @@ Reply ONLY with a single JSON object on one line:
 
 ## 3.5 Kanban 三件套
 
-**用来做什么**：把用户丢进 Triage 的粗糙想法，变成多个专家 agent 可并行认领的任务图。
-**工作中在哪发挥**：`hermes_cli/` 下三个 prompt 依次接力——specifier 写规格 → decomposer 拆子图选人 → describer 写 profile 画像喂给路由；输出严格 JSON，直接写进 SQLite 看板。
+- 用来做什么：把用户丢进 Triage 的粗糙想法，变成多个专家 agent 可并行认领的任务图。
+- 工作中在哪发挥：`hermes_cli/` 下三个 prompt 依次接力——specifier 写规格 → decomposer 拆子图选人 → describer 写 profile 画像喂给路由；输出严格 JSON，直接写进 SQLite 看板。
 
 ### `_SYSTEM_PROMPT`（Specifier）
 
@@ -716,8 +716,8 @@ Rules:
 
 ## 3.6 贴纸视觉理解
 
-**用来做什么**：网关收到贴纸时，侧路视觉模型先把它描述成文字，再参与主对话。
-**工作中在哪发挥**：`task=vision`，描述可缓存复用；模型不必「看懂」图也能接住梗。
+- 用来做什么：网关收到贴纸时，侧路视觉模型先把它描述成文字，再参与主对话。
+- 工作中在哪发挥：`task=vision`，描述可缓存复用；模型不必「看懂」图也能接住梗。
 
 ### `STICKER_VISION_PROMPT`
 
@@ -731,13 +731,13 @@ Describe this sticker in 1-2 sentences. Focus on what it depicts -- character, a
 
 # 4. User-turn 注入
 
-**用来做什么**：会话中途要加一段新要求时，**不改 system，而是拼进当前 user 消息**。
-**工作中在哪发挥**：改 system = 前缀作废 = 缓存全废；改最新 user = 便宜。这是 Hermes 的一条硬架构选择，`/learn`、skill slash、回合后自省都走这条路。
+- 用来做什么：会话中途要加一段新要求时，**不改 system，而是拼进当前 user 消息**。
+- 工作中在哪发挥：改 system = 前缀作废 = 缓存全废；改最新 user = 便宜。这是 Hermes 的一条硬架构选择，`/learn`、skill slash、回合后自省都走这条路。
 
 ## 4.1 回合后自省
 
-**用来做什么**：主回合结束后跑一轮短自省，决定要不要写 memory / 更新技能库。
-**工作中在哪发挥**：`background_review.py`，按开关三选一——只 memory（`:170`）/ 只 skill（`:181`）/ 合一（`:286`）。
+- 用来做什么：主回合结束后跑一轮短自省，决定要不要写 memory / 更新技能库。
+- 工作中在哪发挥：`background_review.py`，按开关三选一——只 memory（`:170`）/ 只 skill（`:181`）/ 合一（`:286`）。
 
 ### `_MEMORY_REVIEW_PROMPT`
 
@@ -787,8 +787,8 @@ Do NOT capture (these become persistent self-imposed constraints that bite you l
 
 ## 4.2 `/learn`：把经验写成技能
 
-**用来做什么**：用户执行 `/learn`，把本次会话的经验沉淀成 SKILL.md。
-**工作中在哪发挥**：`learn_prompt.py:30`，由 `build_learn_prompt()`（`:99`）拼进当前 user；内容主要是格式硬约束。
+- 用来做什么：用户执行 `/learn`，把本次会话的经验沉淀成 SKILL.md。
+- 工作中在哪发挥：`learn_prompt.py:30`，由 `build_learn_prompt()`（`:99`）拼进当前 user；内容主要是格式硬约束。
 
 ### `_AUTHORING_STANDARDS`
 
@@ -816,8 +816,8 @@ Hermes-tool framing (this is what makes it a skill, not shell docs):
 
 ## 4.3 skill slash
 
-**用来做什么**：`/技能名` 展开成一段带技能全文的 user 消息。
-**工作中在哪发挥**：`skill_commands.py:47` 的 `_SKILL_INVOCATION_PREFIX` 打头，拼上技能正文和运行时注脚——「加点技能不废整个前缀」这条架构原则最直观的落地。
+- 用来做什么：`/技能名` 展开成一段带技能全文的 user 消息。
+- 工作中在哪发挥：`skill_commands.py:47` 的 `_SKILL_INVOCATION_PREFIX` 打头，拼上技能正文和运行时注脚——「加点技能不废整个前缀」这条架构原则最直观的落地。
 
 ```text
 [IMPORTANT: The user has invoked the …
